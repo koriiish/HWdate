@@ -8,37 +8,78 @@
 import UIKit
 
 class ViewController: UIViewController {
-
-    var cityArray: Array<City> = [City(cityName: "London", cityTimezone: TimeZone(identifier: "Europe/London")!),
-                                  City(cityName: "New York", cityTimezone: TimeZone(identifier: "America/New_York")!),
-                                  City(cityName: "Minsk", cityTimezone: TimeZone(identifier: "Europe/Minsk")!),
-                                  City(cityName: "Tokyo", cityTimezone:TimeZone(identifier: "Asia/Tokyo")!)]
+    
+    
+    @IBOutlet weak var label: UILabel!
+    @IBOutlet weak var textField: UITextField!
+    
+    var cityArray: Array<String> = ["London", "New York", "Minsk","Tokyo"]
+    var timezonesArray: Array<TimeZone> = [(TimeZone(identifier:"Europe/London")!), (TimeZone(identifier: "America/New_York")!), (TimeZone(identifier: "Europe/Minsk")!), (TimeZone(identifier: "Asia/Tokyo")!)]
+    
+    lazy var pickerView: UIPickerView = {
+        let picker = UIPickerView()
+        picker.delegate = self
+        picker.dataSource = self
+        return picker
+    }()
     
     var currentDate = Date()
+    var selectedCountryIndex: Int?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        print("\(currentDate)")
-       
+        label.text = "Current date: \(currentDate)"
+        textFieldSettings()
+        
+    }
+    
+    func setupDate() {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm:ss"
-        dateFormatter.timeZone = TimeZone(identifier: "UTC")
-
         
-        for city in cityArray {
-            
-            currentDate = dateFormatter.date(from: "12:00:00")!
-            let targetTimeZone = city.cityTimezone
+        if let selectedCountryIndex = selectedCountryIndex {
+            let targetTimeZone = timezonesArray[selectedCountryIndex]
             dateFormatter.timeZone = targetTimeZone
             let timeInCity = dateFormatter.string(from: currentDate)
-            
-            print("City: \(city.cityName), TimeZone: \(city.cityTimezone.description), Current Time: \(timeInCity)")
+            let city = cityArray[selectedCountryIndex]
+               
+            textField.text = "\(city) / \(timeInCity)"
+            }
         }
         
         
+        func textFieldSettings() {
+            textField.inputView = pickerView
+            let toolbar = UIToolbar()
+            toolbar.sizeToFit()
+            
+            let doneButton = UIBarButtonItem(title: "Готово", style: .plain, target: self, action: #selector(doneButtonTapped))
+            toolbar.setItems([doneButton], animated: false)
+            
+            textField.inputAccessoryView = toolbar
+        }
+        
+        @objc func doneButtonTapped() {
+            textField.resignFirstResponder()
+        }
     }
 
-
+extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        cityArray.count
+    }
+        
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return cityArray[row]
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedCountryIndex = row
+        setupDate()
+    }
 }
-
